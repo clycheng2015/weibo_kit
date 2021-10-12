@@ -8,7 +8,6 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.WebpageObject;
 import com.sina.weibo.sdk.api.WeiboMultiMessage;
@@ -271,7 +270,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 message.textObject = object;
             }
 
-            final ImageObject object = new ImageObject();
+            final NewImageObject object = new NewImageObject();
             if (call.hasArgument(ARGUMENT_KEY_IMAGEDATA)) {
 //                object.imageData = call.argument(ARGUMENT_KEY_IMAGEDATA);// 2 * 1024 * 1024
                 this.setImageData(object, (String) call.argument(ARGUMENT_KEY_IMAGEDATA));
@@ -300,7 +299,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         result.success(null);
     }
 
-    private void setImageData(ImageObject object, String path) {
+    private void setImageData(NewImageObject object, String path) {
 //            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ttt);
         FileInputStream fis = null;
         Bitmap bitmap = null;
