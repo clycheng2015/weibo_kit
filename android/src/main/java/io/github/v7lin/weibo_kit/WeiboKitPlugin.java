@@ -273,7 +273,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 object.imagePath = Uri.parse(imageUri).getPath();// 512 - 10 * 1024 * 1024
             }
 
-            message.mediaObject = object;
+            message.imageObject = object;
         } else if (METHOD_SHAREWEBPAGE.equals(call.method)) {
             final WebpageObject object = new WebpageObject();
             object.identify = UUID.randomUUID().toString();
