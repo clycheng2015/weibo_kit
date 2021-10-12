@@ -267,10 +267,10 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
             final ImageObject object = new ImageObject();
             if (call.hasArgument(ARGUMENT_KEY_IMAGEDATA)) {
-                object.imageData = call.argument(ARGUMENT_KEY_IMAGEDATA);// 2 * 1024 * 1024
+                object.imageObject = call.argument(ARGUMENT_KEY_IMAGEDATA);// 2 * 1024 * 1024
             } else if (call.hasArgument(ARGUMENT_KEY_IMAGEURI)) {
                 String imageUri = call.argument(ARGUMENT_KEY_IMAGEURI);
-                object.imagePath = Uri.parse(imageUri).getPath();// 512 - 10 * 1024 * 1024
+                object.imageObject = Uri.parse(imageUri).getPath();// 512 - 10 * 1024 * 1024
             }
 
             message.imageObject = object;
