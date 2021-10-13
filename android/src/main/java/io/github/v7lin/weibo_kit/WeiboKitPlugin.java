@@ -274,7 +274,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 message.textObject = object;
             }
 
-            final ImageObject object = new NewImageObject();
+            final NewImageObject object = new NewImageObject();
             if (call.hasArgument(ARGUMENT_KEY_IMAGEDATA)) {
 //                object.imageData = call.argument(ARGUMENT_KEY_IMAGEDATA);// 2 * 1024 * 1024
                 this.setImageData(object, (String) call.argument(ARGUMENT_KEY_IMAGEDATA));
@@ -302,7 +302,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         result.success(null);
     }
 
-    private void setImageData(ImageObject object, String path) {
+    private void setImageData(NewImageObject object, String path) {
         FileInputStream fis = null;
         Bitmap bitmap = null;
         try {
