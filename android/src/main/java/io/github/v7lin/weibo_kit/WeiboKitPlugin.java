@@ -21,6 +21,7 @@ import com.sina.weibo.sdk.openapi.IWBAPI;
 import com.sina.weibo.sdk.openapi.WBAPIFactory;
 import com.sina.weibo.sdk.share.WbShareCallback;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -280,9 +281,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             } else if (call.hasArgument(ARGUMENT_KEY_IMAGEURI)) {
                 String imageUri = call.argument(ARGUMENT_KEY_IMAGEURI);
 //                object.imagePath = Uri.parse(imageUri).getPath();// 512 - 10 * 1024 * 1024
-//                this.setImageData(object, Uri.parse(imageUri).getPath());
-                MultiImageObject multiImageObject = this.getMultiImageObject(imageUri);
-                message.multiImageObject = multiImageObject;
+                this.setImageData(object, Uri.parse(imageUri).getPath());
             }
             message.mediaObject = object;
         } else if (METHOD_SHAREWEBPAGE.equals(call.method)) {
