@@ -8,8 +8,6 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.sina.weibo.sdk.api.ImageObject;
-import com.sina.weibo.sdk.api.MultiImageObject;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.WebpageObject;
 import com.sina.weibo.sdk.api.WeiboMultiMessage;
@@ -21,12 +19,10 @@ import com.sina.weibo.sdk.openapi.IWBAPI;
 import com.sina.weibo.sdk.openapi.WBAPIFactory;
 import com.sina.weibo.sdk.share.WbShareCallback;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -319,20 +315,5 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 e.printStackTrace();
             }
         }
-    }
-
-    /***
-     * 创建多图
-     * @return
-     */
-    private MultiImageObject getMultiImageObject(String image) {
-        MultiImageObject multiImageObject = new MultiImageObject();
-        //pathList设置的是本地本件的路径,并且是当前应用可以访问的路径，现在不支持网络路径（多图分享依靠微博最新版本的支持，所以当分享到低版本的微博应用时，多图分享失效
-        // 可以通过WbSdk.hasSupportMultiImage 方法判断是否支持多图分享,h5分享微博暂时不支持多图）多图分享接入程序必须有文件读写权限，否则会造成分享失败
-        ArrayList<Uri> pathList = new ArrayList();
-        pathList.add(Uri.fromFile(new File(image)));
-
-        multiImageObject.imageList = pathList;
-        return multiImageObject;
     }
 }
