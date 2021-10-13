@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -304,13 +305,17 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         try {
             fis = new FileInputStream(path);
             bitmap = BitmapFactory.decodeStream(fis);
+            boolean isNull= bitmap==null;
+            Log.d("bitmap===", "bitmap is null "+isNull);
             object.setImageData(bitmap);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {
                 fis.close();
-                bitmap.recycle();
+                if (bitmap != null) {
+                    bitmap.recycle();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
