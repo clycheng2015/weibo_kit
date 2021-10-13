@@ -8,6 +8,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.WebpageObject;
 import com.sina.weibo.sdk.api.WeiboMultiMessage;
@@ -270,7 +271,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 message.textObject = object;
             }
 
-            final NewImageObject object = new NewImageObject();
+            final ImageObject object = new ImageObject();
             if (call.hasArgument(ARGUMENT_KEY_IMAGEDATA)) {
 //                object.imageData = call.argument(ARGUMENT_KEY_IMAGEDATA);// 2 * 1024 * 1024
                 this.setImageData(object, (String) call.argument(ARGUMENT_KEY_IMAGEDATA));
@@ -299,24 +300,22 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         result.success(null);
     }
 
-    private void setImageData(NewImageObject object, String path) {
-//            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ttt);
+    private void setImageData(ImageObject object, String path) {
         FileInputStream fis = null;
         Bitmap bitmap = null;
         try {
             fis = new FileInputStream(path);
             bitmap = BitmapFactory.decodeStream(fis);
             object.setImageData(bitmap);
-//                imageObject.setImagePath(getCacheDir() +"/test.png");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {
                 fis.close();
+                bitmap.recycle();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            bitmap.recycle();
         }
     }
 }
