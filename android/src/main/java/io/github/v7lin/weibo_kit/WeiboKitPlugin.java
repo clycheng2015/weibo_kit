@@ -319,7 +319,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
             Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
-            bitmap = this.compressBitmap(temBitmap, SIZE_LIMIT);
+            bitmap = this.getZoomImage(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
