@@ -316,14 +316,14 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         Bitmap bitmap = null;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.RGB_565;
+//            options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
             Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
             bitmap = getZoomImage(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
-            temBitmap.recycle();
+//            temBitmap.recycle();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
@@ -348,13 +348,13 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         Bitmap bitmap = null;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.RGB_565;
+//            options.inPreferredConfig = Bitmap.Config.RGB_565;
             Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
             bitmap = getZoomImage(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
-            temBitmap.recycle();
+//            temBitmap.recycle();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -416,7 +416,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             return null;
         }
         // 单位：从 Byte 换算成 KB
-        double currentSize = bitmapToByteArray(bitmap, false).length / 1024;
+        double currentSize = bitmapToByteArray(bitmap, true).length / 1024;
         // 判断bitmap占用空间是否大于允许最大空间,如果大于则压缩,小于则不压缩
         while (currentSize > maxSize) {
             // 计算bitmap的大小是maxSize的多少倍
@@ -476,13 +476,19 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         if (bitmap.isRecycled()) {
             return null;
         }
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-        if (needRecycle) {
-            bitmap.recycle();
-        }
+        ByteArrayOutputStream output = null;
+        byte[] result = new byte[0];
+        try {
+            output = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+            if (needRecycle) {
+                bitmap.recycle();
+            }
 
-        byte[] result = output.toByteArray();
+            result = output.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         try {
             output.close();
         } catch (Exception e) {
