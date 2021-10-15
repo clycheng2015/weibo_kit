@@ -319,7 +319,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
             Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
-            bitmap = this.getZoomImage(temBitmap, SIZE_LIMIT);
+            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
@@ -350,7 +350,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            bitmap = this.getZoomImage(temBitmap, SIZE_LIMIT);
+            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
@@ -379,12 +379,13 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             int quality = 100;
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
             // 循环判断压缩后图片是否超过限制大小
-            while (baos.toByteArray().length > sizeLimit) {
+            while (baos.toByteArray().length/1024 > sizeLimit) {
                 // 清空baos
                 baos.reset();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
                 quality -= 10;
             }
+            Log.d("baos.toByteArray()=","len"+baos.toByteArray().length);
             newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
         } catch (Exception e) {
             e.printStackTrace();
