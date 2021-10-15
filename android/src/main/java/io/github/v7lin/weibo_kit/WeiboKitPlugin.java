@@ -19,6 +19,8 @@ import com.sina.weibo.sdk.openapi.IWBAPI;
 import com.sina.weibo.sdk.openapi.WBAPIFactory;
 import com.sina.weibo.sdk.share.WbShareCallback;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -92,6 +94,8 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
     private ActivityPluginBinding activityPluginBinding;
 
     private IWBAPI iwbapi;
+
+    private static final double SIZE_LIMIT = 0.9 * 1024 * 1024;
 
     // --- FlutterPlugin
 
@@ -302,6 +306,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
     /**
      * 根据path设置图片
+     *
      * @param object
      * @param path
      */
@@ -312,10 +317,12 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
-            bitmap = BitmapFactory.decodeStream(fis, null, options);
+            Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
+            bitmap = this.compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
+            temBitmap.recycle();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
@@ -332,6 +339,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
     /**
      * 根据前端传入的字节数组获取图片
+     *
      * @param object
      * @param data
      */
@@ -340,10 +348,12 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.RGB_565;
-            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            bitmap = this.compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
+            temBitmap.recycle();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -351,5 +361,41 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 bitmap.recycle();
             }
         }
+    }
+
+    /**
+     * 图片大小压缩
+     *
+     * @param bitmap
+     * @param sizeLimit
+     * @return
+     */
+    private Bitmap compressBitmap(Bitmap bitmap, double sizeLimit) {
+        Bitmap newBitmap = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            int quality = 100;
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            // 循环判断压缩后图片是否超过限制大小
+            while (baos.toByteArray().length > sizeLimit) {
+                // 清空baos
+                baos.reset();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+                quality -= 10;
+            }
+            newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                baos.close();
+                newBitmap.recycle();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return newBitmap;
     }
 }
