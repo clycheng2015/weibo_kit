@@ -392,7 +392,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         } finally {
             try {
                 baos.close();
-                newBitmap.recycle();
+//                newBitmap.recycle();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -416,7 +416,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             return null;
         }
         // 单位：从 Byte 换算成 KB
-        double currentSize = bitmapToByteArray(bitmap, true).length / 1024;
+        double currentSize = bitmapToByteArray(bitmap, false).length / 1024;
         // 判断bitmap占用空间是否大于允许最大空间,如果大于则压缩,小于则不压缩
         while (currentSize > maxSize) {
             // 计算bitmap的大小是maxSize的多少倍
