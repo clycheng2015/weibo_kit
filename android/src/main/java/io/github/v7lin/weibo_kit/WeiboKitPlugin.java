@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -20,14 +19,11 @@ import com.sina.weibo.sdk.openapi.IWBAPI;
 import com.sina.weibo.sdk.openapi.WBAPIFactory;
 import com.sina.weibo.sdk.share.WbShareCallback;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -313,15 +309,16 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
      */
     private void setImageDataFromPath(NewImageObject object, String path) {
         FileInputStream fis = null;
-        byte[] bitmap = null;
+        byte[] bitmap;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
-//            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
-            Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
-            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
-            object.imageData = bitmap;
-//            temBitmap.recycle();
+            boolean isPng = path.endsWith(".png");
+            bitmap = compressBitmap(BitmapFactory.decodeStream(fis, null, options), SIZE_LIMIT, isPng);
+            if (bitmap != null) {
+                object.imageData = bitmap;
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
@@ -340,175 +337,58 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
      * @param data
      */
     private void setImageDataFromData(NewImageObject object, byte[] data) {
-        byte[] bitmap = null;
-
+        byte[] bitmap;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
-//            options.inPreferredConfig = Bitmap.Config.RGB_565;
-            Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            bitmap = compressBitmap(BitmapFactory.decodeByteArray(data, 0, data.length), SIZE_LIMIT, true);
             if (bitmap != null) {
-                object.imageData=bitmap;
+                object.imageData = bitmap;
             }
-//            temBitmap.recycle();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 图片压缩
+     *
+     * @param bitmap
+     * @param sizeLimit
+     * @return
+     */
+    private byte[] compressBitmap(Bitmap bitmap, long sizeLimit, boolean isPng) {
+        ByteArrayOutputStream baos = null;
+        byte[] imageBytes = new byte[]{};
+        try {
+            Log.d("compressBitmap", "开始压缩" + bitmap.getByteCount());
+            baos = new ByteArrayOutputStream();
+            int quality = 100;
+            bitmap.compress(isPng ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG, quality, baos);
+            Log.d("compressBitmap", "开始压缩" + baos.toByteArray().length / 1024);
+            // 循环判断压缩后图片是否超过限制大小
+            while (baos.toByteArray().length / 1024 > sizeLimit) {
+                Log.d("compressBitmap", "压缩*********");
+                // 清空baos
+                baos.reset();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+                quality -= 10;
+            }
+            Log.d("compressBitmap", "开始压缩后大小" + baos.toByteArray().length / 1024);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (bitmap != null) {
+            try {
+                if (baos != null) {
+                    baos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-    }
-
-//    /**
-//     * 图片大小压缩
-//     *
-//     * @param bitmap
-//     * @param sizeLimit
-//     * @return
-//     */
-//    private Bitmap compressBitmap(Bitmap bitmap, double sizeLimit) {
-//        Bitmap newBitmap = null;
-//        ByteArrayOutputStream baos = null;
-//        try {
-//            baos = new ByteArrayOutputStream();
-//            int quality = 100;
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-//            // 循环判断压缩后图片是否超过限制大小
-//            while (baos.toByteArray().length/1024 > sizeLimit) {
-//                // 清空baos
-//                baos.reset();
-//                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-//                quality -= 10;
-//            }
-//            Log.d("baos.toByteArray()=","len"+baos.toByteArray().length);
-//            newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            try {
-//                baos.close();
-////                newBitmap.recycle();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        return newBitmap;
-//    }
-
-    /**
-     * 图片的缩放方法
-     *
-     * @param bitmap  ：源图片资源
-     * @param maxSize ：图片允许最大空间  单位:KB
-     * @return
-     */
-    public static Bitmap getZoomImage(Bitmap bitmap, double maxSize) {
-        if (null == bitmap) {
-            return null;
+        if (baos != null) {
+            imageBytes = baos.toByteArray();
         }
-        if (bitmap.isRecycled()) {
-            return null;
-        }
-        // 单位：从 Byte 换算成 KB
-        double currentSize = bitmapToByteArray(bitmap, false).length / 1024;
-        // 判断bitmap占用空间是否大于允许最大空间,如果大于则压缩,小于则不压缩
-        while (currentSize > maxSize) {
-            // 计算bitmap的大小是maxSize的多少倍
-            double multiple = currentSize / maxSize;
-            // 开始压缩：将宽带和高度压缩掉对应的平方根倍
-            // 1.保持新的宽度和高度，与bitmap原来的宽高比率一致
-            // 2.压缩后达到了最大大小对应的新bitmap，显示效果最好
-            bitmap = getZoomImage(bitmap, bitmap.getWidth() / Math.sqrt(multiple), bitmap.getHeight() / Math.sqrt(multiple));
-            currentSize = bitmapToByteArray(bitmap, false).length / 1024;
-        }
-        return bitmap;
-    }
-
-    /**
-     * 图片的缩放方法
-     *
-     * @param orgBitmap ：源图片资源
-     * @param newWidth  ：缩放后宽度
-     * @param newHeight ：缩放后高度
-     * @return
-     */
-    public static Bitmap getZoomImage(Bitmap orgBitmap, double newWidth, double newHeight) {
-        if (null == orgBitmap) {
-            return null;
-        }
-        if (orgBitmap.isRecycled()) {
-            return null;
-        }
-        if (newWidth <= 0 || newHeight <= 0) {
-            return null;
-        }
-        // 获取图片的宽和高
-        float width = orgBitmap.getWidth();
-        float height = orgBitmap.getHeight();
-        // 创建操作图片的matrix对象
-        Matrix matrix = new Matrix();
-        // 计算宽高缩放率
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // 缩放图片动作
-        matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap bitmap = Bitmap.createBitmap(orgBitmap, 0, 0, (int) width, (int) height, matrix, true);
-        return bitmap;
-    }
-
-    /**
-     * bitmap转换成byte数组
-     *
-     * @param bitmap
-     * @param needRecycle
-     * @return
-     */
-    public static byte[] bitmapToByteArray(Bitmap bitmap, boolean needRecycle) {
-        if (null == bitmap) {
-            return null;
-        }
-        if (bitmap.isRecycled()) {
-            return null;
-        }
-        ByteArrayOutputStream output = null;
-        byte[] result = new byte[0];
-        try {
-            output = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-            if (needRecycle) {
-                bitmap.recycle();
-            }
-
-            result = output.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            output.close();
-        } catch (Exception e) {
-            Log.e("WeiboKitPlugin", e.toString());
-        }
-        return result;
-    }
-
-    private byte[] compressBitmap(Bitmap bitmap, long sizeLimit) {
-        Log.d("compressBitmap", "开始压缩" + bitmap.getByteCount());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        int quality = 100;
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-        Log.d("compressBitmap", "开始压缩" + baos.toByteArray().length / 1024);
-        // 循环判断压缩后图片是否超过限制大小
-        while (baos.toByteArray().length / 1024 > sizeLimit) {
-            Log.d("compressBitmap", "压缩*********");
-            // 清空baos
-            baos.reset();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-            quality -= 10;
-        }
-        Log.d("compressBitmap", "开始压缩后大小" + baos.toByteArray().length / 1024);
-//        Bitmap newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
-//        Log.d("compressBitmap", "开始压缩结束" + newBitmap.getByteCount());
-        return baos.toByteArray();
+        return imageBytes;
     }
 }
