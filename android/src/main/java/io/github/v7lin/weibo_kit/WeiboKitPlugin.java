@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -274,11 +275,11 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             final NewImageObject object = new NewImageObject();
             if (call.hasArgument(ARGUMENT_KEY_IMAGEDATA)) {
 //                object.imageData = call.argument(ARGUMENT_KEY_IMAGEDATA);// 2 * 1024 * 1024
-                this.setImageData(object, (String) call.argument(ARGUMENT_KEY_IMAGEDATA));
+                this.setImageDataFromData(object, (byte[]) call.argument(ARGUMENT_KEY_IMAGEDATA));
             } else if (call.hasArgument(ARGUMENT_KEY_IMAGEURI)) {
                 String imageUri = call.argument(ARGUMENT_KEY_IMAGEURI);
 //                object.imagePath = Uri.parse(imageUri).getPath();// 512 - 10 * 1024 * 1024
-                this.setImageData(object, Uri.parse(imageUri).getPath());
+                this.setImageDataFromPath(object, Uri.parse(imageUri).getPath());
             }
             message.mediaObject = object;
         } else if (METHOD_SHAREWEBPAGE.equals(call.method)) {
@@ -299,15 +300,22 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         result.success(null);
     }
 
-    private void setImageData(NewImageObject object, String path) {
+    /**
+     * 根据path设置图片
+     * @param object
+     * @param path
+     */
+    private void setImageDataFromPath(NewImageObject object, String path) {
         FileInputStream fis = null;
         Bitmap bitmap = null;
         try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
-            bitmap = BitmapFactory.decodeStream(fis);
-            boolean isNull= bitmap==null;
-            Log.d("bitmap===", "bitmap is null "+isNull);
-            object.setImageData(bitmap);
+            bitmap = BitmapFactory.decodeStream(fis, null, options);
+            if (bitmap != null) {
+                object.setImageData(bitmap);
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
@@ -318,6 +326,29 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 根据前端传入的字节数组获取图片
+     * @param object
+     * @param data
+     */
+    private void setImageDataFromData(NewImageObject object, byte[] data) {
+        Bitmap bitmap = null;
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+            if (bitmap != null) {
+                object.setImageData(bitmap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (bitmap != null) {
+                bitmap.recycle();
             }
         }
     }
