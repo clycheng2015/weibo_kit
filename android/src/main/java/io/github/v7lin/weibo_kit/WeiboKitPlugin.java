@@ -96,7 +96,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
     private IWBAPI iwbapi;
 
-    private static final double SIZE_LIMIT = 5;
+    private static final long SIZE_LIMIT = 5;
 
     // --- FlutterPlugin
 
@@ -313,25 +313,20 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
      */
     private void setImageDataFromPath(NewImageObject object, String path) {
         FileInputStream fis = null;
-        Bitmap bitmap = null;
+        byte[] bitmap = null;
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
 //            options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
             Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
             bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
-            if (bitmap != null) {
-                object.setImageData(bitmap);
-            }
+            object.imageData = bitmap;
 //            temBitmap.recycle();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
             try {
                 fis.close();
-                if (bitmap != null) {
-                    bitmap.recycle();
-                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -502,7 +497,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int quality = 100;
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-        Log.d("compressBitmap", "开始压缩" +  baos.toByteArray().length / 1024);
+        Log.d("compressBitmap", "开始压缩" + baos.toByteArray().length / 1024);
         // 循环判断压缩后图片是否超过限制大小
         while (baos.toByteArray().length / 1024 > sizeLimit) {
             Log.d("compressBitmap", "压缩*********");
@@ -511,7 +506,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
             quality -= 10;
         }
-        Log.d("compressBitmap", "开始压缩后大小" +  baos.toByteArray().length / 1024);
+        Log.d("compressBitmap", "开始压缩后大小" + baos.toByteArray().length / 1024);
 //        Bitmap newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
 //        Log.d("compressBitmap", "开始压缩结束" + newBitmap.getByteCount());
         return baos.toByteArray();
