@@ -96,7 +96,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
     private IWBAPI iwbapi;
 
-    private static final double SIZE_LIMIT = 0.9 * 1024;
+    private static final double SIZE_LIMIT = 0.8 * 1024;
 
     // --- FlutterPlugin
 
@@ -319,7 +319,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
             Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
-            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
+            bitmap = getZoomImage(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
@@ -350,7 +350,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
+            bitmap = getZoomImage(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
