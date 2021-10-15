@@ -340,21 +340,21 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
      * @param data
      */
     private void setImageDataFromData(NewImageObject object, byte[] data) {
-        Bitmap bitmap = null;
+        byte[] bitmap = null;
+
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
 //            options.inPreferredConfig = Bitmap.Config.RGB_565;
             Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
             bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
-                object.setImageData(bitmap);
+                object.imageData=bitmap;
             }
 //            temBitmap.recycle();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (bitmap != null) {
-                bitmap.recycle();
             }
         }
     }
