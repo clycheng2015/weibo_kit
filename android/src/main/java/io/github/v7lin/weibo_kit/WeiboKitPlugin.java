@@ -96,7 +96,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
     private IWBAPI iwbapi;
 
-    private static final double SIZE_LIMIT = 0.8 * 1024;
+    private static final double SIZE_LIMIT = 5;
 
     // --- FlutterPlugin
 
@@ -319,7 +319,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 //            options.inPreferredConfig = Bitmap.Config.RGB_565;
             fis = new FileInputStream(path);
             Bitmap temBitmap = BitmapFactory.decodeStream(fis, null, options);
-            bitmap = getZoomImage(temBitmap, SIZE_LIMIT);
+            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
@@ -350,7 +350,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             BitmapFactory.Options options = new BitmapFactory.Options();
 //            options.inPreferredConfig = Bitmap.Config.RGB_565;
             Bitmap temBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            bitmap = getZoomImage(temBitmap, SIZE_LIMIT);
+            bitmap = compressBitmap(temBitmap, SIZE_LIMIT);
             if (bitmap != null) {
                 object.setImageData(bitmap);
             }
@@ -364,42 +364,42 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
         }
     }
 
-    /**
-     * 图片大小压缩
-     *
-     * @param bitmap
-     * @param sizeLimit
-     * @return
-     */
-    private Bitmap compressBitmap(Bitmap bitmap, double sizeLimit) {
-        Bitmap newBitmap = null;
-        ByteArrayOutputStream baos = null;
-        try {
-            baos = new ByteArrayOutputStream();
-            int quality = 100;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-            // 循环判断压缩后图片是否超过限制大小
-            while (baos.toByteArray().length/1024 > sizeLimit) {
-                // 清空baos
-                baos.reset();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
-                quality -= 10;
-            }
-            Log.d("baos.toByteArray()=","len"+baos.toByteArray().length);
-            newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                baos.close();
-//                newBitmap.recycle();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return newBitmap;
-    }
+//    /**
+//     * 图片大小压缩
+//     *
+//     * @param bitmap
+//     * @param sizeLimit
+//     * @return
+//     */
+//    private Bitmap compressBitmap(Bitmap bitmap, double sizeLimit) {
+//        Bitmap newBitmap = null;
+//        ByteArrayOutputStream baos = null;
+//        try {
+//            baos = new ByteArrayOutputStream();
+//            int quality = 100;
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+//            // 循环判断压缩后图片是否超过限制大小
+//            while (baos.toByteArray().length/1024 > sizeLimit) {
+//                // 清空baos
+//                baos.reset();
+//                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+//                quality -= 10;
+//            }
+//            Log.d("baos.toByteArray()=","len"+baos.toByteArray().length);
+//            newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                baos.close();
+////                newBitmap.recycle();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        return newBitmap;
+//    }
 
     /**
      * 图片的缩放方法
@@ -495,5 +495,25 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
             Log.e("WeiboKitPlugin", e.toString());
         }
         return result;
+    }
+
+    private byte[] compressBitmap(Bitmap bitmap, long sizeLimit) {
+        Log.d("compressBitmap", "开始压缩" + bitmap.getByteCount());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int quality = 100;
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        Log.d("compressBitmap", "开始压缩" +  baos.toByteArray().length / 1024);
+        // 循环判断压缩后图片是否超过限制大小
+        while (baos.toByteArray().length / 1024 > sizeLimit) {
+            Log.d("compressBitmap", "压缩*********");
+            // 清空baos
+            baos.reset();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            quality -= 10;
+        }
+        Log.d("compressBitmap", "开始压缩后大小" +  baos.toByteArray().length / 1024);
+//        Bitmap newBitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(baos.toByteArray()), null, null);
+//        Log.d("compressBitmap", "开始压缩结束" + newBitmap.getByteCount());
+        return baos.toByteArray();
     }
 }
