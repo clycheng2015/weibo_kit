@@ -95,7 +95,7 @@ public class WeiboKitPlugin implements FlutterPlugin, ActivityAware, PluginRegis
 
     private IWBAPI iwbapi;
 
-    private static final double SIZE_LIMIT = 0.8 * 1024 * 1024;
+    private static final double SIZE_LIMIT = 0.9 * 1024 * 1024;
 
     // --- FlutterPlugin
 
